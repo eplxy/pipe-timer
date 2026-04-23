@@ -7,6 +7,8 @@ import metalPipeSound from "./assets/metal-pipe-falling.mp3"
 
 export function App() {
   const [durationInSec, setDurationInSec] = useState<number>(12)
+  const [displayedDuration, setDisplayedDuration] =
+    useState<number>(durationInSec)
   const [timeLeftInSec, setTimeLeftInSec] = useState<number>(12)
   const [completedIntervals, setCompletedIntervals] = useState<number>(0)
   const [isRunning, setIsRunning] = useState<boolean>(false)
@@ -93,9 +95,9 @@ export function App() {
     const parsed = Number(value)
     const safeDuration = Number.isFinite(parsed)
       ? Math.max(1, Math.floor(parsed))
-      : 1
-
+      : 10
     setDurationInSec(safeDuration)
+    setDisplayedDuration(safeDuration)
   }
 
   const handleReset = () => {
@@ -121,9 +123,10 @@ export function App() {
           <Field className="w-32">
             <FieldLabel>Duration (s)</FieldLabel>
             <Input
-              value={durationInSec}
-              onChange={(e) => handleDurationChange(e.target.value)}
+              value={displayedDuration}
+              onChange={(e) => setDisplayedDuration(e.target.valueAsNumber)}
               type="number"
+              onBlur={() => handleDurationChange(displayedDuration.toString())}
               id="time-picker-optional"
               min="1"
               step="1"
