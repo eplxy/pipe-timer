@@ -4,6 +4,7 @@ import { Input } from "./components/ui/input"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Progress } from "./components/ui/progress"
 import metalPipeSound from "./assets/metal-pipe-falling.mp3"
+import AudioUploader from "./components/audio-uploader"
 
 export function App() {
   const [durationInSec, setDurationInSec] = useState<number>(12)
@@ -12,8 +13,10 @@ export function App() {
   const [timeLeftInSec, setTimeLeftInSec] = useState<number>(12)
   const [completedIntervals, setCompletedIntervals] = useState<number>(0)
   const [isRunning, setIsRunning] = useState<boolean>(false)
+  const [uploadedAudioUrl, setUploadedAudioUrl] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const isRunningRef = useRef<boolean>(false)
+  const activeAudioSource = uploadedAudioUrl ?? metalPipeSound
 
   const getProgress = () => {
     return ((durationInSec - timeLeftInSec) / durationInSec) * 100
@@ -23,7 +26,7 @@ export function App() {
     .slice(14, 19)
 
   useEffect(() => {
-    audioRef.current = new Audio(metalPipeSound)
+    audioRef.current = new Audio(activeAudioSource)
     audioRef.current.preload = "auto"
 
     return () => {
@@ -31,7 +34,7 @@ export function App() {
         audioRef.current.pause()
       }
     }
-  }, [])
+  }, [activeAudioSource])
 
   const unlockAudio = async () => {
     if (!audioRef.current) return
@@ -43,18 +46,14 @@ export function App() {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
       audioRef.current.muted = false
-    } catch {
-      // Ignore: browser might still block until user interacts again.
-    }
+    } catch {}
   }
 
   const playSoundEffect = () => {
     if (!audioRef.current) return
 
     audioRef.current.currentTime = 0
-    void audioRef.current.play().catch(() => {
-      // Ignore: playback can be blocked by browser media policies.
-    })
+    void audioRef.current.play().catch(() => {})
   }
 
   const handleIntervalCompletion = () => {
@@ -133,6 +132,8 @@ export function App() {
               className="[appearance:textfield] bg-background [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </Field>
+          <AudioUploader onAudioReady={setUploadedAudioUrl} />
+
           <br className="mt-10" />
 
           <p className="text-4xl font-semibold tabular-nums">{formattedTime}</p>
@@ -142,7 +143,10 @@ export function App() {
           </p>
 
           <div className="mt-2 flex gap-2">
-            <Button onClick={handleToggleRunning}>
+            <Button
+              onClick={handleToggleRunning}
+              variant={isRunning ? "secondary" : "default"}
+            >
               {isRunning ? "pause" : "start"}
             </Button>
             <Button variant="secondary" onClick={handleReset}>
